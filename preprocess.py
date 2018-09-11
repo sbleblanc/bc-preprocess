@@ -1,12 +1,54 @@
 import re
 
-def CleanSentence(s):
+def AnalyseText(in_fn):
+    print('Analysing {}...'.format(in_fn))
+    vocab = set()
+    contractions = set()
     word_count = 0
-    cleaned = []
-    for m in re.finditer(r"\w?['\w]*\w", s):
-        cleaned.append(m.group() + ' ')
+    sentences_count = 0
+    with(open(in_fn, 'r')) as in_file:
+        for s in in_file:
+            sentences_count += 1
+            words = s.split(' ')
+            for w in words:
+                word_count += 1
+                vocab.add(w)
+                if "'" in w:
+                    contractions.add(w)
+    print('Vocabulary size : {}'.format(len(vocab)))
+    print('Sentences count : {}'.format(sentences_count))
+    print('Word count : {}'.format(word_count))
+    print('Detected contractions : {}'.format(contractions))
+
+def FindSplits(in_fn, train_portion):
+    corpus = []
+    with(open(in_fn, 'r')) as in_file:
+        for s in in_file:
+            words = s.split(' ')
+            for w in words:
+                corpus.append(w)
+    last_index = int(len(corpus) * train_portion)
+    train_vocab = set()
+    test_vocab = set()
+    for i in range(last_index):
+        train_vocab.add(corpus[i])
+    for i in range(last_index, len(corpus)):
+        test_vocab.add(corpus[i])
+    avoids_unk = len(train_vocab.intersection(test_vocab)) == len(test_vocab)
+    print('Does {}/{} split avoids UNK: {}'.format(train_portion*100, (1-train_portion)*100, avoids_unk))
+
+
+def SplitWords(s):
+    words = []
+    word_count = 0
+    for m in re.finditer(r"(^|\s)(['a-zA-Z]*[a-zA-Z])", s):
+        words.append(m.group())
         word_count += 1
-    return ''.join(cleaned).rstrip(), word_count
+    return words, word_count
+
+def CleanSentence(s):
+    words, wc = SplitWords(s)
+    return ''.join(words).rstrip(), wc
 
 
 def CountDuplicates(in_fn):
@@ -20,6 +62,7 @@ def CountDuplicates(in_fn):
             else:
                 sentences.add(s)
     print('Total amount of duplcates : {}'.format(num_duplicates))
+
 
 def SentencesToDistinct(in_fn, out_fn, s_pool):
     print('Processing {} into {}...'.format(in_fn, out_fn))
@@ -71,9 +114,12 @@ def AnalyseDuplicates(in_fn):
         print('\t{}:{}'.format(top_dups[i], duplicates[top_dups[i]]))
 
 
-AnalyseDuplicates('total_sentences.txt')
+FindSplits('distinct_sentences.txt', 08)
+#AnalyseText('distinct_sentences.txt')
+#Concatenate('total_sentences.txt', 'books_large_p1.txt', 'books_large_p2.txt')
+#AnalyseDuplicates('books_in_sentences.txt')
 #sentences = set()
-#SentencesToDistinct('books_large_p1.txt', 'distinct_sentences.txt', sentences)
+#SentencesToDistinct('books_in_sentences.txt', 'distinct_sentences.txt', sentences)
 #SentencesToDistinct('books_large_p2.txt', 'distinct_sentences.txt', sentences)
 #CountDuplicates('books_large_p1.txt')
 #CountDuplicates('books_large_p2.txt')
