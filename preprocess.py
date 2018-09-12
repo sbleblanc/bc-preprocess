@@ -43,7 +43,7 @@ def FindSplits(in_fn, train_portion):
 def SplitWords(s):
     words = []
     word_count = 0
-    for m in re.finditer(r"(^''|^'|^|[\s-])(['a-zA-Z]*[a-zA-Z])", s):
+    for m in re.finditer(r"(^|[\s'\-`])([a-zA-Z]+\w*[a-zA-Z]*)", s):
         words.append(m.group(2))
         word_count += 1
     return words, word_count
@@ -125,7 +125,7 @@ AnalyseText('distinct_sentences.txt')
 # Concatenate('total_sentences.txt', 'books_large_p1.txt', 'books_large_p2.txt')
 # AnalyseDuplicates('books_in_sentences.txt')
 # sentences = set()
-# SentencesToDistinct('total_sentences.txt', 'distinct_sentences.txt', sentences)
+# SentencesToDistinct('books_in_sentences.txt', 'distinct_sentences.txt', sentences)
 # SentencesToDistinct('books_large_p2.txt', 'distinct_sentences.txt', sentences)
 # CountDuplicates('books_large_p1.txt')
 # CountDuplicates('books_large_p2.txt')
