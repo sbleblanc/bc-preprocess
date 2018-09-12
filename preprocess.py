@@ -21,6 +21,7 @@ def AnalyseText(in_fn):
     print('Detected contractions : {}'.format(contractions))
 
 def FindSplits(in_fn, train_portion):
+    print('Trying split for {} with a {}% train portion...'.format(in_fn, train_portion * 100))
     corpus = []
     with(open(in_fn, 'r')) as in_file:
         for s in in_file:
@@ -35,20 +36,24 @@ def FindSplits(in_fn, train_portion):
     for i in range(last_index, len(corpus)):
         test_vocab.add(corpus[i])
     avoids_unk = len(train_vocab.intersection(test_vocab)) == len(test_vocab)
+    print('Train vocabulary size : {}'.format(len(train_vocab)))
     print('Does {}/{} split avoids UNK: {}'.format(train_portion*100, (1-train_portion)*100, avoids_unk))
 
 
 def SplitWords(s):
     words = []
     word_count = 0
-    for m in re.finditer(r"(^|\s)(['a-zA-Z]*[a-zA-Z])", s):
-        words.append(m.group())
+    for m in re.finditer(r"(^''|^'|^|[\s-])(['a-zA-Z]*[a-zA-Z])", s):
+        words.append(m.group(2))
         word_count += 1
     return words, word_count
 
 def CleanSentence(s):
     words, wc = SplitWords(s)
-    return ''.join(words).rstrip(), wc
+    clean = []
+    for w in words:
+        clean.append(w + " ")
+    return ''.join(clean).rstrip(), wc
 
 
 def CountDuplicates(in_fn):
@@ -69,9 +74,10 @@ def SentencesToDistinct(in_fn, out_fn, s_pool):
     with(open(in_fn,'r')) as in_file:
         with(open(out_fn,'a')) as out_file:
             for s in in_file:
-                if s not in s_pool:
-                    s_pool.add(s)
-                    out_file.write(s)
+                cs, _ = CleanSentence(s)
+                if cs not in s_pool:
+                    s_pool.add(cs)
+                    out_file.write(cs + '\n')
 
 
 def Concatenate(out_file, *in_files):
@@ -114,13 +120,13 @@ def AnalyseDuplicates(in_fn):
         print('\t{}:{}'.format(top_dups[i], duplicates[top_dups[i]]))
 
 
-FindSplits('distinct_sentences.txt', 08)
-#AnalyseText('distinct_sentences.txt')
-#Concatenate('total_sentences.txt', 'books_large_p1.txt', 'books_large_p2.txt')
-#AnalyseDuplicates('books_in_sentences.txt')
-#sentences = set()
-#SentencesToDistinct('books_in_sentences.txt', 'distinct_sentences.txt', sentences)
-#SentencesToDistinct('books_large_p2.txt', 'distinct_sentences.txt', sentences)
-#CountDuplicates('books_large_p1.txt')
-#CountDuplicates('books_large_p2.txt')
-#CountDuplicates('distinct_sentences.txt')
+# FindSplits('distinct_sentences.txt', 0.9)
+AnalyseText('distinct_sentences.txt')
+# Concatenate('total_sentences.txt', 'books_large_p1.txt', 'books_large_p2.txt')
+# AnalyseDuplicates('books_in_sentences.txt')
+# sentences = set()
+# SentencesToDistinct('total_sentences.txt', 'distinct_sentences.txt', sentences)
+# SentencesToDistinct('books_large_p2.txt', 'distinct_sentences.txt', sentences)
+# CountDuplicates('books_large_p1.txt')
+# CountDuplicates('books_large_p2.txt')
+# CountDuplicates('distinct_sentences.txt')
